@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { galleries } from '../data/galleries'
+import { useEffect, useState } from 'react'
+import { galleries as placeholderGalleries, type GalleryGroup } from '../data/galleries'
 import Lightbox from '../components/Lightbox'
 import styles from './Gallery.module.css'
 
@@ -8,11 +8,49 @@ interface OpenState {
   index: number
 }
 
+interface RemotePhoto {
+  id: string
+  src: string
+}
+
 export default function Gallery() {
+  const [groups, setGroups] = useState<GalleryGroup[]>(placeholderGalleries)
   const [open, setOpen] = useState<OpenState | null>(null)
-  const activeGroup = open
-    ? galleries.find((g) => g.slug === open.groupSlug)
-    : undefined
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/.netlify/functions/gallery-photos')
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error('request failed'))))
+      .then((data: Record<string, RemotePhoto[]>) => {
+        if (cancelled) return
+        setGroups((prev) =>
+          prev.map((group) => {
+            const real = data[group.slug]
+            if (!real || real.length === 0) return group
+            return {
+              ...group,
+              photos: real.map((photo, i) => ({
+                id: photo.id,
+                alt: `${group.title} photo ${i + 1}`,
+                gradient: group.photos[i % group.photos.length]?.gradient ?? '',
+                src: photo.src,
+              })),
+            }
+          }),
+        )
+      })
+      .catch(() => {
+        // Local dev without Netlify functions, or a Cloudinary hiccup --
+        // keep showing the placeholder photos already in state.
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const activeGroup = open ? groups.find((g) => g.slug === open.groupSlug) : undefined
 
   return (
     <div className="container">
@@ -22,7 +60,7 @@ export default function Gallery() {
         <p>Collections grouped by the kind of shoot you're after.</p>
       </div>
 
-      {galleries.map((group) => (
+      {groups.map((group) => (
         <section key={group.slug} className={styles.group}>
           <div className={styles.groupHeader}>
             <h2>{group.title}</h2>
