@@ -1,3 +1,4 @@
+import aboutImg from '../assets/about.jpg'
 import styles from './About.module.css'
 
 export default function About() {
@@ -5,8 +6,7 @@ export default function About() {
     <section id="about" className={styles.section}>
       <div className={styles.photoWrap}>
         <div className={styles.decorativeCircle} />
-        {/* Swap for: <img className={styles.photo} src="/about.jpg" alt="Annierose Pound" /> */}
-        <div className={styles.photo} role="img" aria-label="Annierose Pound" />
+        <img className={styles.photo} src={aboutImg} alt="Annierose Pound" />
       </div>
       <div className={styles.body}>
         <p className={styles.eyebrow}>About</p>

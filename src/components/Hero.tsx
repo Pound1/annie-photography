@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
+import heroImg from '../assets/hero.jpg'
 import styles from './Hero.module.css'
 
 export default function Hero() {
   return (
     <section className={styles.section}>
       <div className={styles.hero}>
-        {/* Swap for: <img className={styles.heroImage} src="/hero.jpg" alt="" /> */}
+        <img className={styles.heroImage} src={heroImg} alt="" />
         <div className={styles.scrim} />
         <div className={styles.heroText}>
           <h1>Annierose Pound Photography</h1>
