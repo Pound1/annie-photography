@@ -1,7 +1,9 @@
-const { adminAuthHeader, requireAdmin, env } = require('./_cloudinary')
+const { cloudinary, requireAdmin, env } = require('./_cloudinary')
 
-// Lists images in a Cloudinary folder (gallery group) via the Admin API.
-// Read-only, used by the admin page to show what's already uploaded.
+// Lists images in a Cloudinary asset folder (gallery album) via the Admin
+// API. Uses resources_by_asset_folder rather than the legacy prefix-search
+// endpoint, since Dynamic Folder Mode decouples public_id from folder
+// placement -- see the comment in cloudinary-sign.js.
 exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, body: 'Method not allowed' }
@@ -16,18 +18,13 @@ exports.handler = async (event) => {
   }
 
   try {
-    const cloudName = env('CLOUDINARY_CLOUD_NAME')
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?type=upload&prefix=${encodeURIComponent(folder)}/&max_results=100`
-    const res = await fetch(url, { headers: { Authorization: adminAuthHeader() } })
-    const data = await res.json()
-    if (!res.ok) {
-      return { statusCode: res.status, body: JSON.stringify(data) }
-    }
-    return { statusCode: 200, body: JSON.stringify(data) }
+    env('CLOUDINARY_CLOUD_NAME')
+    const result = await cloudinary.api.resources_by_asset_folder(folder, { max_results: 100 })
+    return { statusCode: 200, body: JSON.stringify({ resources: result.resources }) }
   } catch (err) {
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: `Cloudinary is not configured yet: ${err.message}` }),
+      statusCode: err.error?.http_code ?? 500,
+      body: JSON.stringify({ error: err.error?.message ?? `Cloudinary is not configured yet: ${err.message}` }),
     }
   }
 }

@@ -1,8 +1,7 @@
-const { signParams, requireAdmin, env, adminAuthHeader } = require('./_cloudinary')
+const { cloudinary, requireAdmin, env } = require('./_cloudinary')
 
-// Deletes one image by its Cloudinary public_id. Deletion needs a
-// signed request (unlike unsigned uploads), which is why this has to
-// go through a server-side function rather than straight from the browser.
+// Deletes one image by its Cloudinary public_id via the official SDK
+// (handles signing internally).
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' }
@@ -22,35 +21,16 @@ exports.handler = async (event) => {
   }
 
   try {
-    const cloudName = env('CLOUDINARY_CLOUD_NAME')
-    const timestamp = Math.round(Date.now() / 1000)
-    const signature = signParams({ public_id: publicId, timestamp })
-
-    const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: adminAuthHeader(),
-        },
-        body: JSON.stringify({
-          public_id: publicId,
-          timestamp,
-          signature,
-          api_key: env('CLOUDINARY_API_KEY'),
-        }),
-      },
-    )
-    const data = await res.json()
-    if (!res.ok) {
-      return { statusCode: res.status, body: JSON.stringify(data) }
+    env('CLOUDINARY_CLOUD_NAME')
+    const result = await cloudinary.uploader.destroy(publicId)
+    if (result.result !== 'ok') {
+      return { statusCode: 400, body: JSON.stringify({ error: result.result }) }
     }
-    return { statusCode: 200, body: JSON.stringify(data) }
+    return { statusCode: 200, body: JSON.stringify(result) }
   } catch (err) {
     return {
-      statusCode: 500,
-      body: JSON.stringify({ error: `Cloudinary is not configured yet: ${err.message}` }),
+      statusCode: err.error?.http_code ?? 500,
+      body: JSON.stringify({ error: err.error?.message ?? `Cloudinary is not configured yet: ${err.message}` }),
     }
   }
 }

@@ -131,7 +131,8 @@ function AdminPanel({ token, onLogout }: { token: string; onLogout: () => void }
       body.append('api_key', sign.apiKey)
       body.append('timestamp', String(sign.timestamp))
       body.append('signature', sign.signature)
-      body.append('folder', sign.folder)
+      body.append('asset_folder', sign.assetFolder)
+      body.append('public_id_prefix', sign.publicIdPrefix)
 
       const uploadRes = await fetch(
         `https://api.cloudinary.com/v1_1/${sign.cloudName}/image/upload`,
