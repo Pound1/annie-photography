@@ -1,0 +1,26 @@
+.footer {
+  margin-top: auto;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: var(--space-3);
+  color: var(--color-text);
+  opacity: 0.65;
+  font-size: 0.8rem;
+}
+
+.inner p {
+  margin: 0;
+}
+
+.brand {
+  font-family: var(--font-heading);
+  color: var(--color-accent);
+}
+
+.inner a {
+  text-decoration: none;
+}

@@ -1,0 +1,106 @@
+import { useCallback, useEffect } from 'react'
+import type { Photo } from '../data/galleries'
+import styles from './Lightbox.module.css'
+
+interface LightboxProps {
+  albumName: string
+  photos: Photo[]
+  index: number
+  onClose: () => void
+  onChangeIndex: (index: number) => void
+}
+
+export default function Lightbox({
+  albumName,
+  photos,
+  index,
+  onClose,
+  onChangeIndex,
+}: LightboxProps) {
+  const total = photos.length
+  const photo = photos[index]
+
+  const goPrev = useCallback(
+    () => onChangeIndex((index - 1 + total) % total),
+    [index, total, onChangeIndex],
+  )
+  const goNext = useCallback(
+    () => onChangeIndex((index + 1) % total),
+    [index, total, onChangeIndex],
+  )
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft') goPrev()
+      if (e.key === 'ArrowRight') goNext()
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [goPrev, goNext, onClose])
+
+  return (
+    <div
+      className={styles.overlay}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${albumName}: ${photo.alt}`}
+    >
+      <div className={styles.topBar}>
+        <div className={styles.albumName}>{albumName}</div>
+        <div className={styles.topRight}>
+          {total > 1 && (
+            <span className={styles.counter}>
+              {index + 1} / {total}
+            </span>
+          )}
+          <button
+            type="button"
+            className={styles.close}
+            onClick={onClose}
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.stage}>
+        {total > 1 && (
+          <button
+            type="button"
+            className={`${styles.navButton} ${styles.prev}`}
+            onClick={goPrev}
+            aria-label="Previous photo"
+          >
+            &#8249;
+          </button>
+        )}
+
+        <div className={styles.imageFrame}>
+          {photo.src ? (
+            <img className={styles.image} src={photo.src} alt={photo.alt} />
+          ) : (
+            <div
+              className={styles.image}
+              style={{ background: photo.gradient, width: '50vw', maxWidth: 560 }}
+              role="img"
+              aria-label={photo.alt}
+            />
+          )}
+        </div>
+
+        {total > 1 && (
+          <button
+            type="button"
+            className={`${styles.navButton} ${styles.next}`}
+            onClick={goNext}
+            aria-label="Next photo"
+          >
+            &#8250;
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}

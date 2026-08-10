@@ -1,0 +1,76 @@
+/*
+  Design tokens, translated from Annie's Claude-design export
+  (Downloads/Annierose Pound Photography - standalone.html):
+  warm cream base, terracotta accent, sage-green secondary accent,
+  Caprasimo display headings + Figtree body text.
+*/
+:root {
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
+  --color-text: #201e1d;
+
+  --color-accent: #c67139;
+  --color-accent-100: #fff2eb;
+  --color-accent-600: #b2622d;
+  --color-accent-700: #8c491a;
+  --color-accent-800: #643312;
+
+  --color-accent-2: #7a8a5e;
+  --color-accent-2-100: #f0fae1;
+  --color-accent-2-800: #3d472b;
+
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-300: #dcd3c4;
+  --color-neutral-700: #645c50;
+  --color-divider: rgba(32, 30, 29, 0.16);
+  --color-border: var(--color-divider);
+  --color-text-muted: var(--color-neutral-700);
+
+  --font-heading: 'Caprasimo', system-ui, sans-serif;
+  --font-body: 'Figtree', system-ui, sans-serif;
+
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --space-4: 2.5rem;
+  --space-5: 4rem;
+  --space-6: 6rem;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --radius: var(--radius-md);
+  --max-width: 1160px;
+
+  --shadow-sm: 0 1px 2px rgba(46, 43, 37, 0.14);
+  --shadow-md: 0 3px 10px rgba(46, 43, 37, 0.16);
+  --shadow-lg: 0 12px 32px rgba(46, 43, 37, 0.22);
+  --shadow-soft: var(--shadow-lg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #221c14;
+    --color-surface: #2c2419;
+    --color-text: #f5ead8;
+
+    --color-accent: #d9895a;
+    --color-accent-100: #4a2c19;
+    --color-accent-600: #e6a37a;
+    --color-accent-700: #f0b895;
+    --color-accent-800: #f7d3bb;
+
+    --color-accent-2: #9db080;
+    --color-accent-2-100: #2e3524;
+    --color-accent-2-800: #cddab5;
+
+    --color-neutral-100: #2c2419;
+    --color-neutral-300: #493d2c;
+    --color-neutral-700: #c9bfab;
+    --color-divider: rgba(245, 234, 216, 0.16);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 3px 10px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  }
+}
