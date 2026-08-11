@@ -49,14 +49,19 @@
   }
 }
 
+/*
+  Fixed light colours, not theme tokens: this text sits on the hero
+  photo's dark scrim regardless of light/dark site theme, so it must
+  never flip to the dark-mode text colour or it clashes with the image.
+*/
 .heroText h1 {
-  color: var(--color-bg);
+  color: #f5ead8;
   font-size: clamp(2rem, 5.5vw, 3.75rem);
   margin: 0;
 }
 
 .heroText p {
-  color: var(--color-neutral-100);
+  color: #f9f4ed;
   font-size: 1rem;
   max-width: 420px;
   margin: 14px 0 0;
