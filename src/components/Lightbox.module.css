@@ -7,12 +7,18 @@
   flex-direction: column;
 }
 
+/*
+  Fixed light colours, not theme tokens: the overlay background is a fixed
+  dark rgba() regardless of site theme, so anything using var(--color-bg)
+  turns near-invisible dark-on-dark in dark mode (same bug as the hero
+  text -- see Hero.module.css).
+*/
 .topBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 24px 40px;
-  color: var(--color-bg);
+  color: #f5ead8;
 }
 
 .albumName {
@@ -34,7 +40,7 @@
 .close {
   background: transparent;
   border: none;
-  color: var(--color-bg);
+  color: #f5ead8;
   font-size: 1.6rem;
   line-height: 1;
   cursor: pointer;
@@ -80,7 +86,7 @@
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  color: var(--color-bg);
+  color: #f5ead8;
   font-size: 2rem;
   cursor: pointer;
   z-index: 2;

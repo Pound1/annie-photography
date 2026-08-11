@@ -48,6 +48,7 @@ export default function Lightbox({
       role="dialog"
       aria-modal="true"
       aria-label={`${albumName}: ${photo.alt}`}
+      onClick={onClose}
     >
       <div className={styles.topBar}>
         <div className={styles.albumName}>{albumName}</div>
@@ -73,14 +74,17 @@ export default function Lightbox({
           <button
             type="button"
             className={`${styles.navButton} ${styles.prev}`}
-            onClick={goPrev}
+            onClick={(e) => {
+              e.stopPropagation()
+              goPrev()
+            }}
             aria-label="Previous photo"
           >
             &#8249;
           </button>
         )}
 
-        <div className={styles.imageFrame}>
+        <div className={styles.imageFrame} onClick={(e) => e.stopPropagation()}>
           {photo.src ? (
             <>
               <img
@@ -108,7 +112,10 @@ export default function Lightbox({
           <button
             type="button"
             className={`${styles.navButton} ${styles.next}`}
-            onClick={goNext}
+            onClick={(e) => {
+              e.stopPropagation()
+              goNext()
+            }}
             aria-label="Next photo"
           >
             &#8250;
