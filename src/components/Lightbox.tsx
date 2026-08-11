@@ -1,5 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import type { Photo } from '../data/galleries'
+import Spinner from './Spinner'
+import { useImageLoaded } from '../hooks/useImageLoaded'
 import styles from './Lightbox.module.css'
 
 interface LightboxProps {
@@ -19,6 +21,7 @@ export default function Lightbox({
 }: LightboxProps) {
   const total = photos.length
   const photo = photos[index]
+  const { ref, loaded, error, onLoad, onError } = useImageLoaded(photo.src)
 
   const goPrev = useCallback(
     () => onChangeIndex((index - 1 + total) % total),
@@ -79,7 +82,18 @@ export default function Lightbox({
 
         <div className={styles.imageFrame}>
           {photo.src ? (
-            <img className={styles.image} src={photo.src} alt={photo.alt} />
+            <>
+              <img
+                ref={ref}
+                className={styles.image}
+                src={photo.src}
+                alt={photo.alt}
+                onLoad={onLoad}
+                onError={onError}
+                style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.25s ease' }}
+              />
+              {!loaded && !error && <Spinner />}
+            </>
           ) : (
             <div
               className={styles.image}

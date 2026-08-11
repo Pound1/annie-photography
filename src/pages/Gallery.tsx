@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { galleries as placeholderGalleries, type GalleryGroup } from '../data/galleries'
+import { galleries as placeholderGalleries, type GalleryGroup, type Photo } from '../data/galleries'
 import Lightbox from '../components/Lightbox'
+import Spinner from '../components/Spinner'
+import { useImageLoaded } from '../hooks/useImageLoaded'
 import styles from './Gallery.module.css'
 
 interface OpenState {
@@ -11,6 +13,36 @@ interface OpenState {
 interface RemotePhoto {
   id: string
   src: string
+}
+
+function GalleryThumb({ photo, onOpen }: { photo: Photo; onOpen: () => void }) {
+  const { ref, loaded, error, onLoad, onError } = useImageLoaded(photo.src)
+
+  return (
+    <button
+      type="button"
+      className={styles.thumb}
+      onClick={onOpen}
+      aria-label={`Open ${photo.alt}`}
+    >
+      {photo.src ? (
+        <>
+          <img
+            ref={ref}
+            className={styles.thumbImage}
+            src={photo.src}
+            alt={photo.alt}
+            onLoad={onLoad}
+            onError={onError}
+            style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.25s ease' }}
+          />
+          {!loaded && !error && <Spinner />}
+        </>
+      ) : (
+        <div className={styles.thumbImage} style={{ background: photo.gradient }} />
+      )}
+    </button>
+  )
 }
 
 export default function Gallery() {
@@ -68,26 +100,11 @@ export default function Gallery() {
           </div>
           <div className={styles.grid}>
             {group.photos.map((photo, i) => (
-              <button
+              <GalleryThumb
                 key={photo.id}
-                type="button"
-                className={styles.thumb}
-                onClick={() => setOpen({ groupSlug: group.slug, index: i })}
-                aria-label={`Open ${photo.alt}`}
-              >
-                {photo.src ? (
-                  <img
-                    className={styles.thumbImage}
-                    src={photo.src}
-                    alt={photo.alt}
-                  />
-                ) : (
-                  <div
-                    className={styles.thumbImage}
-                    style={{ background: photo.gradient }}
-                  />
-                )}
-              </button>
+                photo={photo}
+                onOpen={() => setOpen({ groupSlug: group.slug, index: i })}
+              />
             ))}
           </div>
         </section>
