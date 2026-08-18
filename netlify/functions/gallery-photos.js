@@ -1,17 +1,21 @@
 const { cloudinary } = require('./_cloudinary')
+const { readIndex } = require('./_galleries')
 
-// Public, unauthenticated: returns real photos per album for the /gallery
-// page to display. Read-only, no admin token needed -- this is the site's
+// Public, unauthenticated: returns real photos per album for the gallery
+// pages to display. Read-only, no admin token needed -- this is the site's
 // actual content, not a management action.
-const ALBUM_SLUGS = ['landscapes', 'portraits', 'nature']
-
 exports.handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, body: 'Method not allowed' }
   }
 
   const requested = event.queryStringParameters?.folder
-  const slugs = requested ? [requested] : ALBUM_SLUGS
+  const visibleSlugs = (await readIndex()).filter((g) => g.visible).map((g) => g.slug)
+
+  if (requested && !visibleSlugs.includes(requested)) {
+    return { statusCode: 404, body: JSON.stringify({ error: 'Gallery not found.' }) }
+  }
+  const slugs = requested ? [requested] : visibleSlugs
 
   try {
     const entries = await Promise.all(

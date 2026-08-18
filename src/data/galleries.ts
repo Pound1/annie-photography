@@ -1,21 +1,21 @@
-// Placeholder gallery data. Each photo is rendered as a coloured
-// swatch until real images exist. Shape matches what a Cloudinary
-// folder listing would return (id, alt, src, plus gradient fallback),
-// so swapping this file for a real fetch later is a drop-in change.
-// Album names/slugs match Annie's design (Landscapes / Portraits / Nature).
+// Gallery metadata (title/description/visibility) is admin-managed and
+// fetched from the galleries-list / galleries-admin Netlify functions --
+// nothing here is hardcoded content anymore. This file just holds the
+// shared types and a placeholder-gradient helper for gallery covers that
+// don't have a photo yet.
 
-export interface Photo {
-  id: string
-  alt: string
-  gradient: string
-  src?: string
-}
-
-export interface GalleryGroup {
+export interface GalleryMeta {
   slug: string
   title: string
   description: string
-  photos: Photo[]
+  visible: boolean
+  createdAt: string
+}
+
+export interface Photo {
+  id: string
+  src: string
+  alt: string
 }
 
 const gradients = [
@@ -27,31 +27,10 @@ const gradients = [
   'linear-gradient(135deg, #dcd3c4, #7a8a5e)',
 ]
 
-function placeholderPhotos(prefix: string, count: number): Photo[] {
-  return Array.from({ length: count }, (_, i) => ({
-    id: `${prefix}-${i + 1}`,
-    alt: `Placeholder photo ${i + 1} for ${prefix} album`,
-    gradient: gradients[i % gradients.length],
-  }))
+// Deterministic per-gallery gradient, used as a cover placeholder before a
+// gallery has any photos.
+export function gradientForSlug(slug: string): string {
+  let hash = 0
+  for (let i = 0; i < slug.length; i += 1) hash = (hash * 31 + slug.charCodeAt(i)) | 0
+  return gradients[Math.abs(hash) % gradients.length]
 }
-
-export const galleries: GalleryGroup[] = [
-  {
-    slug: 'landscapes',
-    title: 'Landscapes',
-    description: 'Wide open spaces and quiet, wild places.',
-    photos: placeholderPhotos('landscapes', 6),
-  },
-  {
-    slug: 'portraits',
-    title: 'Portraits',
-    description: 'Natural light portraits, individuals and families.',
-    photos: placeholderPhotos('portraits', 6),
-  },
-  {
-    slug: 'nature',
-    title: 'Nature',
-    description: 'Close, honest moments outdoors.',
-    photos: placeholderPhotos('nature', 6),
-  },
-]

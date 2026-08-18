@@ -85,27 +85,16 @@ export default function Lightbox({
         )}
 
         <div className={styles.imageFrame} onClick={(e) => e.stopPropagation()}>
-          {photo.src ? (
-            <>
-              <img
-                ref={ref}
-                className={styles.image}
-                src={photo.src}
-                alt={photo.alt}
-                onLoad={onLoad}
-                onError={onError}
-                style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.25s ease' }}
-              />
-              {!loaded && !error && <Spinner />}
-            </>
-          ) : (
-            <div
-              className={styles.image}
-              style={{ background: photo.gradient, width: '50vw', maxWidth: 560 }}
-              role="img"
-              aria-label={photo.alt}
-            />
-          )}
+          <img
+            ref={ref}
+            className={styles.image}
+            src={photo.src}
+            alt={photo.alt}
+            onLoad={onLoad}
+            onError={onError}
+            style={{ opacity: loaded ? 1 : 0, transition: 'opacity 0.25s ease' }}
+          />
+          {!loaded && !error && <Spinner />}
         </div>
 
         {total > 1 && (

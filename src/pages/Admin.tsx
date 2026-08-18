@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { galleries } from '../data/galleries'
+import type { GalleryMeta } from '../data/galleries'
 import styles from './Admin.module.css'
 
 const TOKEN_KEY = 'annie-admin-token'
@@ -77,10 +77,113 @@ function PasswordGate({ onAuthed }: { onAuthed: (token: string) => void }) {
 }
 
 function AdminPanel({ token, onLogout }: { token: string; onLogout: () => void }) {
-  const [folder, setFolder] = useState(galleries[0]?.slug ?? '')
+  const [galleries, setGalleries] = useState<GalleryMeta[]>([])
+  const [galleriesLoaded, setGalleriesLoaded] = useState(false)
+  const [galleryError, setGalleryError] = useState<string | null>(null)
+  const [busySlug, setBusySlug] = useState<string | null>(null)
+  const [newTitle, setNewTitle] = useState('')
+  const [newDescription, setNewDescription] = useState('')
+  const [creatingGallery, setCreatingGallery] = useState(false)
+
+  const [folder, setFolder] = useState('')
   const [items, setItems] = useState<CloudinaryResource[]>([])
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+
+  async function loadGalleries() {
+    setGalleryError(null)
+    try {
+      const res = await fetch('/.netlify/functions/galleries-admin', {
+        headers: { 'x-admin-token': token },
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setGalleryError(data.error ?? 'Could not load galleries.')
+        return
+      }
+      setGalleries(data)
+      setFolder((prev) => prev || data[0]?.slug || '')
+    } catch {
+      setGalleryError('Could not reach the server.')
+    } finally {
+      setGalleriesLoaded(true)
+    }
+  }
+
+  useEffect(() => {
+    loadGalleries()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
+
+  async function handleCreateGallery(e: FormEvent) {
+    e.preventDefault()
+    if (!newTitle.trim()) return
+    setCreatingGallery(true)
+    setGalleryError(null)
+    try {
+      const res = await fetch('/.netlify/functions/galleries-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+        body: JSON.stringify({ title: newTitle, description: newDescription }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not create gallery.')
+      setGalleries((prev) => [...prev, data])
+      setFolder(data.slug)
+      setNewTitle('')
+      setNewDescription('')
+    } catch (err) {
+      setGalleryError(err instanceof Error ? err.message : 'Could not create gallery.')
+    } finally {
+      setCreatingGallery(false)
+    }
+  }
+
+  async function handleToggleVisible(gallery: GalleryMeta) {
+    setBusySlug(gallery.slug)
+    setGalleryError(null)
+    try {
+      const res = await fetch('/.netlify/functions/galleries-admin', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+        body: JSON.stringify({ slug: gallery.slug, visible: !gallery.visible }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not update gallery.')
+      setGalleries((prev) => prev.map((g) => (g.slug === gallery.slug ? data : g)))
+    } catch (err) {
+      setGalleryError(err instanceof Error ? err.message : 'Could not update gallery.')
+    } finally {
+      setBusySlug(null)
+    }
+  }
+
+  async function handleDeleteGallery(gallery: GalleryMeta) {
+    const confirmTitle = prompt(
+      `This permanently deletes "${gallery.title}" and every photo in it. Type the gallery name to confirm:`,
+    )
+    if (confirmTitle === null) return
+    setBusySlug(gallery.slug)
+    setGalleryError(null)
+    try {
+      const res = await fetch('/.netlify/functions/galleries-admin', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+        body: JSON.stringify({ slug: gallery.slug, confirmTitle }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not delete gallery.')
+      setGalleries((prev) => {
+        const next = prev.filter((g) => g.slug !== gallery.slug)
+        setFolder((prevFolder) => (prevFolder === gallery.slug ? next[0]?.slug ?? '' : prevFolder))
+        return next
+      })
+    } catch (err) {
+      setGalleryError(err instanceof Error ? err.message : 'Could not delete gallery.')
+    } finally {
+      setBusySlug(null)
+    }
+  }
 
   async function loadItems(targetFolder: string) {
     setError(null)
@@ -172,7 +275,7 @@ function AdminPanel({ token, onLogout }: { token: string; onLogout: () => void }
   return (
     <div className={`container ${styles.panel}`}>
       <div className={styles.row} style={{ justifyContent: 'space-between' }}>
-        <h1 style={{ margin: 0 }}>Manage photos</h1>
+        <h1 style={{ margin: 0 }}>Manage galleries</h1>
         <button className="btn btn-secondary" onClick={onLogout}>
           Log out
         </button>
@@ -183,6 +286,56 @@ function AdminPanel({ token, onLogout }: { token: string; onLogout: () => void }
         CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET and ADMIN_PASSWORD set as
         Netlify environment variables before it will work &mdash; see .env.example.
       </p>
+
+      <h2>Galleries</h2>
+
+      <form className={styles.row} onSubmit={handleCreateGallery}>
+        <input
+          placeholder="New gallery title"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          required
+        />
+        <input
+          placeholder="Description (optional)"
+          value={newDescription}
+          onChange={(e) => setNewDescription(e.target.value)}
+        />
+        <button className="btn btn-primary" type="submit" disabled={creatingGallery}>
+          {creatingGallery ? 'Creating…' : 'Create gallery'}
+        </button>
+      </form>
+
+      {galleryError && <p className={styles.error}>{galleryError}</p>}
+
+      {galleriesLoaded && (
+        <ul className={styles.galleryList}>
+          {galleries.map((gallery) => (
+            <li key={gallery.slug} className={styles.galleryRow}>
+              <span className={styles.galleryTitle}>{gallery.title}</span>
+              <label className={styles.galleryToggle}>
+                <input
+                  type="checkbox"
+                  checked={gallery.visible}
+                  disabled={busySlug === gallery.slug}
+                  onChange={() => handleToggleVisible(gallery)}
+                />
+                Visible
+              </label>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={busySlug === gallery.slug}
+                onClick={() => handleDeleteGallery(gallery)}
+              >
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <h2>Photos</h2>
 
       <div className={styles.row}>
         <label htmlFor="folder">Gallery</label>
@@ -197,7 +350,7 @@ function AdminPanel({ token, onLogout }: { token: string; onLogout: () => void }
 
       <form className={styles.row} onSubmit={handleUpload}>
         <input type="file" name="file" accept="image/*" required />
-        <button className="btn btn-primary" type="submit" disabled={uploading}>
+        <button className="btn btn-primary" type="submit" disabled={uploading || !folder}>
           {uploading ? 'Uploading…' : 'Upload photo'}
         </button>
       </form>
