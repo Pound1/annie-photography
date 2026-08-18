@@ -1,5 +1,5 @@
 const { connectLambda } = require('@netlify/blobs')
-const { cloudinary } = require('./_cloudinary')
+const { resourcesInFolder } = require('./_cloudinary')
 const { readIndex } = require('./_galleries')
 
 // Public, unauthenticated: returns real photos per album for the gallery
@@ -25,10 +25,8 @@ exports.handler = async (event) => {
   try {
     const entries = await Promise.all(
       slugs.map(async (slug) => {
-        const result = await cloudinary.api.resources_by_asset_folder(slug, {
-          max_results: 100,
-        })
-        const photos = result.resources.map((r) => ({
+        const resources = await resourcesInFolder(slug, { max_results: 100 })
+        const photos = resources.map((r) => ({
           id: r.public_id,
           src: r.secure_url,
           width: r.width,

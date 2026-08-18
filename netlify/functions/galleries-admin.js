@@ -1,5 +1,5 @@
 const { connectLambda } = require('@netlify/blobs')
-const { cloudinary, requireAdmin } = require('./_cloudinary')
+const { cloudinary, requireAdmin, resourcesInFolder } = require('./_cloudinary')
 const { readIndex, writeIndex, slugify, uniqueSlug } = require('./_galleries')
 
 // Authenticated gallery management: list all (incl. hidden), create,
@@ -82,8 +82,8 @@ exports.handler = async (event) => {
         }
       }
 
-      const result = await cloudinary.api.resources_by_asset_folder(slug, { max_results: 500 })
-      const publicIds = result.resources.map((r) => r.public_id)
+      const resources = await resourcesInFolder(slug, { max_results: 500 })
+      const publicIds = resources.map((r) => r.public_id)
       if (publicIds.length > 0) {
         await cloudinary.api.delete_resources(publicIds)
       }

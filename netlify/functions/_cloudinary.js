@@ -17,4 +17,21 @@ function requireAdmin(event) {
   return Boolean(token) && token === process.env.ADMIN_PASSWORD
 }
 
-module.exports = { env, cloudinary, requireAdmin }
+// A Cloudinary asset folder only starts existing once something has been
+// uploaded into it, so a brand-new (still-empty) gallery makes
+// resources_by_asset_folder throw "Folder doesn't exist" instead of just
+// returning no resources. Treat that specific error as an empty gallery
+// everywhere we list folder contents; let any other error keep propagating.
+async function resourcesInFolder(folder, options) {
+  try {
+    const result = await cloudinary.api.resources_by_asset_folder(folder, options)
+    return result.resources
+  } catch (err) {
+    if (err.error?.message?.startsWith("Folder doesn't exist")) {
+      return []
+    }
+    throw err
+  }
+}
+
+module.exports = { env, cloudinary, requireAdmin, resourcesInFolder }

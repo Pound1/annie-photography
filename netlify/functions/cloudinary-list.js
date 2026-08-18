@@ -1,4 +1,4 @@
-const { cloudinary, requireAdmin, env } = require('./_cloudinary')
+const { requireAdmin, env, resourcesInFolder } = require('./_cloudinary')
 
 // Lists images in a Cloudinary asset folder (gallery album) via the Admin
 // API. Uses resources_by_asset_folder rather than the legacy prefix-search
@@ -19,8 +19,8 @@ exports.handler = async (event) => {
 
   try {
     env('CLOUDINARY_CLOUD_NAME')
-    const result = await cloudinary.api.resources_by_asset_folder(folder, { max_results: 100 })
-    return { statusCode: 200, body: JSON.stringify({ resources: result.resources }) }
+    const resources = await resourcesInFolder(folder, { max_results: 100 })
+    return { statusCode: 200, body: JSON.stringify({ resources }) }
   } catch (err) {
     return {
       statusCode: err.error?.http_code ?? 500,

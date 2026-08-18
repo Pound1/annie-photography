@@ -357,6 +357,10 @@ function AdminPanel({ token, onLogout }: { token: string; onLogout: () => void }
 
       {error && <p className={styles.error}>{error}</p>}
 
+      {!error && items.length === 0 && (
+        <p className={styles.note}>No photos in this gallery yet.</p>
+      )}
+
       <div className={styles.grid}>
         {items.map((item) => (
           <div key={item.public_id} className={styles.item}>
