@@ -1,3 +1,4 @@
+const { connectLambda } = require('@netlify/blobs')
 const { cloudinary, requireAdmin } = require('./_cloudinary')
 const { readIndex, writeIndex, slugify, uniqueSlug } = require('./_galleries')
 
@@ -6,6 +7,10 @@ const { readIndex, writeIndex, slugify, uniqueSlug } = require('./_galleries')
 // in that gallery's Cloudinary folder -- irreversible, so the client must
 // send confirmTitle matching the gallery's title exactly).
 exports.handler = async (event) => {
+  // Classic Lambda-compatible function -- wire up Netlify Blobs for this
+  // invocation before any getStore call (see galleries-list.js).
+  connectLambda(event)
+
   if (!requireAdmin(event)) {
     return { statusCode: 401, body: JSON.stringify({ error: 'Not authorised.' }) }
   }

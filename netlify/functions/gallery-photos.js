@@ -1,3 +1,4 @@
+const { connectLambda } = require('@netlify/blobs')
 const { cloudinary } = require('./_cloudinary')
 const { readIndex } = require('./_galleries')
 
@@ -5,6 +6,10 @@ const { readIndex } = require('./_galleries')
 // pages to display. Read-only, no admin token needed -- this is the site's
 // actual content, not a management action.
 exports.handler = async (event) => {
+  // Classic Lambda-compatible function -- wire up Netlify Blobs for this
+  // invocation before any getStore call (see galleries-list.js).
+  connectLambda(event)
+
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, body: 'Method not allowed' }
   }
